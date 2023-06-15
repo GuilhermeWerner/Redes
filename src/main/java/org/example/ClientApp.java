@@ -21,8 +21,11 @@ public class ClientApp extends JFrame {
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
+    private String clientName;
 
-    public ClientApp() {
+    public ClientApp(String name) {
+        this.clientName = name;
+
         setTitle("Chat Client");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(400, 300);
@@ -73,7 +76,7 @@ public class ClientApp extends JFrame {
                 try {
                     String serverMessage;
                     while ((serverMessage = in.readLine()) != null) {
-                        chatArea.append("Server: " + serverMessage + "\n");
+                        chatArea.append(serverMessage + "\n");
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -94,7 +97,7 @@ public class ClientApp extends JFrame {
     private void sendMessage() {
         String message = messageField.getText().trim();
         if (!message.isEmpty()) {
-            out.println(message);
+            out.println(clientName + ": " + message);
             messageField.setText("");
             chatArea.append("You: " + message + "\n");
         }
@@ -104,7 +107,7 @@ public class ClientApp extends JFrame {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new ClientApp();
+                new ClientApp(args[0]);
             }
         });
     }

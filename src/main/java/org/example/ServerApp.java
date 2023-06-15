@@ -61,7 +61,6 @@ public class ServerApp {
             try {
                 in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 out = new PrintWriter(clientSocket.getOutputStream(), true);
-
                 String clientMessage;
                 while ((clientMessage = in.readLine()) != null) {
                     broadcastMessage(clientMessage, this);
