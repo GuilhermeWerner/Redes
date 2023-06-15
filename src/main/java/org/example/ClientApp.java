@@ -8,17 +8,21 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.Socket;
 
 public class ClientApp extends JFrame {
     private static final String SERVER_IP = "localhost";
-    private static final int SERVER_PORT = 1234;
+    private static final int SERVER_TCP_PORT = 1234;
+    private static final int SERVER_UDP_PORT = 5678;
 
     private JTextArea chatArea;
     private JTextField messageField;
     private JButton sendButton;
 
-    private Socket socket;
+    private Socket tcpSocket;
+    private DatagramSocket udpSocket;
     private BufferedReader in;
     private PrintWriter out;
     private String clientName;
@@ -55,21 +59,23 @@ public class ClientApp extends JFrame {
         setVisible(true);
 
         connectToServer();
-        startListening();
+        startTCPListening();
+        startUDPListening();
     }
 
     private void connectToServer() {
         try {
-            socket = new Socket(SERVER_IP, SERVER_PORT);
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out = new PrintWriter(socket.getOutputStream(), true);
+            tcpSocket = new Socket(SERVER_IP, SERVER_TCP_PORT);
+            udpSocket = new DatagramSocket();
+            in = new BufferedReader(new InputStreamReader(tcpSocket.getInputStream()));
+            out = new PrintWriter(tcpSocket.getOutputStream(), true);
             chatArea.append("Connected to server\n");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void startListening() {
+    private void startTCPListening() {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -84,10 +90,33 @@ public class ClientApp extends JFrame {
                     try {
                         in.close();
                         out.close();
-                        socket.close();
+                        tcpSocket.close();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                }
+            }
+        });
+        thread.start();
+    }
+
+    private void startUDPListening() {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    byte[] buffer = new byte[1024];
+                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+
+                    while (true) {
+                        udpSocket.receive(packet);
+                        String message = new String(packet.getData(), 0, packet.getLength());
+                        chatArea.append(message + "\n");
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    udpSocket.close();
                 }
             }
         });
@@ -98,17 +127,33 @@ public class ClientApp extends JFrame {
         String message = messageField.getText().trim();
         if (!message.isEmpty()) {
             out.println(clientName + ": " + message);
+            //sendUDPMessage(clientName + ": " + message);
             messageField.setText("");
             chatArea.append("You: " + message + "\n");
         }
     }
 
+    private void sendUDPMessage(String message) {
+        try {
+            byte[] buffer = message.getBytes();
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, tcpSocket.getInetAddress(),
+                    SERVER_UDP_PORT);
+            udpSocket.send(packet);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new ClientApp(args[0]);
-            }
-        });
+        if (args.length > 0) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    new ClientApp(args[0]);
+                }
+            });
+        } else {
+            System.out.println("Please provide a client name as an argument.");
+        }
     }
 }
