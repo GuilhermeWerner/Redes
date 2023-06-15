@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -86,17 +87,34 @@ public class ServerApp {
         public void run() {
             try {
                 byte[] buffer = new byte[1024];
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 
                 while (true) {
+                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                     datagramSocket.receive(packet);
-                    String message = new String(packet.getData(), 0, packet.getLength());
-                    broadcastTCPMessage(message, null);
+                    String request = new String(packet.getData(), 0, packet.getLength());
+
+                    if (request.equals("GET_CLIENTS")) {
+                        sendClientList(packet.getAddress(), packet.getPort());
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
                 datagramSocket.close();
+            }
+        }
+
+        private void sendClientList(InetAddress address, int port) {
+            StringBuilder clientList = new StringBuilder();
+            for (ClientHandler client : clients) {
+                clientList.append(client.getClientName()).append("\n");
+            }
+            byte[] buffer = clientList.toString().getBytes();
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, port);
+            try {
+                datagramSocket.send(packet);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -106,9 +124,14 @@ public class ServerApp {
         private DatagramSocket datagramSocket;
         private BufferedReader in;
         private PrintWriter out;
+        private String clientName;
 
         public ClientHandler(Socket socket) {
             this.clientSocket = socket;
+        }
+
+        public String getClientName() {
+            return clientName;
         }
 
         @Override
@@ -117,6 +140,9 @@ public class ServerApp {
                 in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 out = new PrintWriter(clientSocket.getOutputStream(), true);
                 datagramSocket = new DatagramSocket();
+
+                clientName = in.readLine();
+                broadcastTCPMessage(clientName + " entrou no chat.", this);
 
                 String clientMessage;
                 while ((clientMessage = in.readLine()) != null) {
@@ -143,7 +169,8 @@ public class ServerApp {
         public void sendUDPMessage(String message) {
             try {
                 byte[] buffer = message.getBytes();
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, clientSocket.getInetAddress(), UDP_PORT);
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, clientSocket.getInetAddress(),
+                        UDP_PORT);
                 datagramSocket.send(packet);
             } catch (IOException e) {
                 e.printStackTrace();

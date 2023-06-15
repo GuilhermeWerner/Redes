@@ -20,6 +20,7 @@ public class ClientApp extends JFrame {
     private JTextArea chatArea;
     private JTextField messageField;
     private JButton sendButton;
+    private JButton listButton;
 
     private Socket tcpSocket;
     private DatagramSocket udpSocket;
@@ -54,6 +55,15 @@ public class ClientApp extends JFrame {
         });
         bottomPanel.add(sendButton, BorderLayout.EAST);
 
+        listButton = new JButton("List");
+        listButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                requestConnectedClients();
+            }
+        });
+        bottomPanel.add(listButton, BorderLayout.WEST);
+
         add(bottomPanel, BorderLayout.SOUTH);
 
         setVisible(true);
@@ -81,6 +91,7 @@ public class ClientApp extends JFrame {
             public void run() {
                 try {
                     String serverMessage;
+                    out.println(clientName);
                     while ((serverMessage = in.readLine()) != null) {
                         chatArea.append(serverMessage + "\n");
                     }
@@ -127,7 +138,7 @@ public class ClientApp extends JFrame {
         String message = messageField.getText().trim();
         if (!message.isEmpty()) {
             out.println(clientName + ": " + message);
-            //sendUDPMessage(clientName + ": " + message);
+            // sendUDPMessage(clientName + ": " + message);
             messageField.setText("");
             chatArea.append("You: " + message + "\n");
         }
@@ -142,6 +153,10 @@ public class ClientApp extends JFrame {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void requestConnectedClients() {
+        sendUDPMessage("GET_CLIENTS");
     }
 
     public static void main(String[] args) {
