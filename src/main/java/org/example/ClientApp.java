@@ -14,8 +14,8 @@ import java.net.Socket;
 
 public class ClientApp extends JFrame {
     private static final String SERVER_IP = "localhost";
-    private static final int SERVER_TCP_PORT = 1234;
-    private static final int SERVER_UDP_PORT = 5678;
+    private static final int SERVER_TCP_PORT = 5475;
+    private static final int SERVER_UDP_PORT = 5565;
 
     private JTextArea chatArea;
     private JTextField messageField;

@@ -13,8 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ServerApp {
-    private static final int TCP_PORT = 1234;
-    private static final int UDP_PORT = 5678;
+    private static final int TCP_PORT = 5475;
+    private static final int UDP_PORT = 5565;
     private List<ClientHandler> clients;
 
     public ServerApp() {
