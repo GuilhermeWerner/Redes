@@ -1,4 +1,4 @@
-package org.example;
+package com.example.redes;
 
 import java.io.BufferedReader;
 import java.io.IOException;

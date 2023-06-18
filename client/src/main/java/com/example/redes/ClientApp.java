@@ -1,4 +1,4 @@
-package org.example;
+package com.example.redes;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,7 +13,7 @@ import java.net.DatagramSocket;
 import java.net.Socket;
 
 public class ClientApp extends JFrame {
-    private static final String SERVER_IP = "localhost";
+    private static final String SERVER_IP = "172.16.0.1";
     private static final int SERVER_TCP_PORT = 5475;
     private static final int SERVER_UDP_PORT = 5565;
 
