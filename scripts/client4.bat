@@ -1,3 +1,3 @@
 @echo off
 
-java -jar .\client\build\libs\client.jar Afonso
+java -jar .\client\build\libs\client.jar Zigfrido
